@@ -14,8 +14,13 @@ import json
 import pandas as pd
 
 class ModelEvaluator:
-    def __init__(self, model_path='runs/surveillance/train/weights/best.pt'):
+    def __init__(self, model_path='runs/detect/runs/surveillance/weights/best.pt'):
         """Initialize evaluator with trained model"""
+        # Try alternate path if default doesn't exist
+        if not Path(model_path).exists():
+            alt_path = 'runs/surveillance/train/weights/best.pt'
+            if Path(alt_path).exists():
+                model_path = alt_path
         self.model = YOLO(model_path)
         self.class_names = ['Animal', 'Forest', 'Militant', 'UAV-Drone', 'Wildfire']
         self.results_dir = Path('evaluation_results')

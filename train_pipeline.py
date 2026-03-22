@@ -1,33 +1,50 @@
 """
-Surveillance System - YOLOv8 Training Pipeline
-Dataset: 5 classes - Animal, Forest, Militant, UAV-Drone, Wildfire
+Training Pipeline for Surveillance System
+YOLOv8 Model Training with Comprehensive Logging
 """
 
 import os
 from pathlib import Path
 from ultralytics import YOLO
+import torch
 import yaml
 
 def setup_training():
-    """Initialize and configure YOLOv8 model"""
-    # Load pretrained YOLOv8 model
-    model = YOLO('yolov8n.pt')  # nano model for faster training
+    """Initialize model and check environment"""
+    print("[INFO] Setting up training environment...")
+    
+    # Check CUDA availability
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    print(f"[INFO] Using device: {device}")
+    if device == 'cuda':
+        print(f"[INFO] GPU: {torch.cuda.get_device_name(0)}")
+        print(f"[INFO] CUDA Version: {torch.version.cuda}")
+    
+    # Load pre-trained YOLOv8 model
+    model = YOLO('yolov8n.pt')
+    print("[INFO] Loaded YOLOv8n base model")
     
     return model
 
-def train_model(model, data_yaml='data.yaml', epochs=100, imgsz=640, batch=16):
+def train_model(model, epochs=100, batch=16, imgsz=640):
     """Train the model with specified parameters"""
+    print(f"\n[INFO] Starting training...")
+    print(f"  - Epochs: {epochs}")
+    print(f"  - Batch Size: {batch}")
+    print(f"  - Image Size: {imgsz}")
     
+    # Training configuration
     results = model.train(
-        data=data_yaml,
+        data='data.yaml',
         epochs=epochs,
         imgsz=imgsz,
         batch=batch,
+        name='surveillance',
         patience=20,
         save=True,
-        device=0,  # Use GPU if available, else CPU
-        project='runs/surveillance',
-        name='train',
+        device=0 if torch.cuda.is_available() else 'cpu',
+        workers=8,
+        project='runs',
         exist_ok=True,
         pretrained=True,
         optimizer='auto',
@@ -42,21 +59,15 @@ def train_model(model, data_yaml='data.yaml', epochs=100, imgsz=640, batch=16):
         amp=True,
         fraction=1.0,
         profile=False,
-        freeze=None,
-        lr0=0.01,
-        lrf=0.01,
-        momentum=0.937,
-        weight_decay=0.0005,
-        warmup_epochs=3.0,
-        warmup_momentum=0.8,
-        warmup_bias_lr=0.1,
-        box=7.5,
-        cls=0.5,
-        dfl=1.5,
-        pose=12.0,
-        kobj=1.0,
-        label_smoothing=0.0,
-        nbs=64,
+        overlap_mask=True,
+        mask_ratio=4,
+        dropout=0.0,
+        val=True,
+        split='val',
+        save_period=-1,
+        cache=False,
+        plots=True,
+        # Data augmentation
         hsv_h=0.015,
         hsv_s=0.7,
         hsv_v=0.4,
@@ -72,19 +83,27 @@ def train_model(model, data_yaml='data.yaml', epochs=100, imgsz=640, batch=16):
         copy_paste=0.0
     )
     
+    print("\n[SUCCESS] Training completed!")
+    print(f"[INFO] Best model saved at: runs/surveillance/train/weights/best.pt")
+    print(f"[INFO] Last model saved at: runs/surveillance/train/weights/last.pt")
+    
     return results
 
-if __name__ == "__main__":
-    print("=" * 60)
-    print("Surveillance System - YOLOv8 Training Pipeline")
-    print("=" * 60)
+def main():
+    """Main training execution"""
+    print("=" * 70)
+    print("SURVEILLANCE SYSTEM - MODEL TRAINING")
+    print("=" * 70)
     
     # Setup
     model = setup_training()
     
     # Train
-    print("\n[INFO] Starting training...")
     results = train_model(model, epochs=100, batch=16)
     
-    print("\n[INFO] Training completed!")
-    print(f"[INFO] Best model saved at: runs/surveillance/train/weights/best.pt")
+    print("\n" + "=" * 70)
+    print("TRAINING COMPLETED SUCCESSFULLY")
+    print("=" * 70)
+
+if __name__ == "__main__":
+    main()
