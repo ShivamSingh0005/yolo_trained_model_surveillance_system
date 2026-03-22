@@ -39,14 +39,15 @@ venv.bak/
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# Model files and outputs
-runs/
-evaluation_results/
+# Model files (keep results, exclude large weights)
 *.pt
 *.pth
 *.onnx
 *.engine
 *.tflite
+
+# Keep evaluation_results/ and runs/ but exclude large files
+runs/**/weights/
 quick_predictions.png
 
 # Dataset (large files - optional, uncomment if you want to exclude)
