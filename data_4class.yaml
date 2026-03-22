@@ -1,0 +1,15 @@
+# 4-Class Surveillance Dataset (Wildfire removed)
+path: .
+train: train/images
+val: valid/images
+test: test/images
+
+# Classes
+names:
+  0: Animal
+  1: Forest
+  2: Militant
+  3: UAV-Drone
+
+# Number of classes
+nc: 4
