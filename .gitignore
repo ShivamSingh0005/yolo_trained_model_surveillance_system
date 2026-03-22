@@ -1,0 +1,67 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Model files and outputs
+runs/
+evaluation_results/
+*.pt
+*.pth
+*.onnx
+*.engine
+*.tflite
+quick_predictions.png
+
+# Dataset (large files - optional, uncomment if you want to exclude)
+# train/images/*.jpg
+# test/images/*.jpg
+# valid/images/*.jpg
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+
+# OS
+Thumbs.db
+.DS_Store
