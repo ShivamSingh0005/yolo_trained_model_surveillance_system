@@ -1,177 +1,394 @@
-# Surveillance System - YOLOv8 Pipeline
+# 4-Class Surveillance System - YOLOv8
 
-Complete training, evaluation, and visualization pipeline for a surveillance system detecting 5 classes:
-- Animal
-- Forest
-- Militant
-- UAV-Drone
-- Wildfire
+Production-ready surveillance system using YOLOv8n for real-time threat detection.
 
-## Dataset Structure
+## 🎯 System Overview
+
+**Performance**: 93.0% mAP@0.5 | **Status**: ✅ Production Ready
+
+### Detected Classes
+- **Animal** - 98.4% AP50
+- **Forest** - 89.0% AP50
+- **Militant** - 88.6% AP50
+- **UAV-Drone** - 95.9% AP50
+
+### Key Features
+✅ Real-time detection (3-15 FPS on Raspberry Pi)
+✅ High accuracy across all classes (88%+ AP50)
+✅ Optimized for edge deployment (6.3 MB model)
+✅ Automatic threat level classification
+✅ Raspberry Pi support with camera integration
+✅ Comprehensive logging and monitoring
+
+## 📁 Project Structure
 
 ```
 .
-├── train/
-│   ├── images/     (646 images)
-│   └── labels/     (646 labels)
-├── test/
-│   ├── images/     (114 images)
-│   └── labels/     (114 labels)
-└── data.yaml       (dataset configuration)
+├── FINAL_4CLASS_MODEL/              # Production model and results
+│   ├── best_4class_model.pt         # Trained model (6.3 MB)
+│   ├── metrics.json                 # Performance metrics
+│   ├── training_curves.png          # Training visualizations
+│   ├── confusion_matrix.png         # Confusion matrix
+│   └── advanced analysis figures    # ROC, state evolution, tail probability
+│
+├── train/                           # Training dataset (601 images)
+├── valid/                           # Validation dataset (186 images)
+├── test/                            # Test dataset (112 images)
+├── data_4class.yaml                 # Dataset configuration
+│
+├── raspberry_pi_surveillance.py     # Raspberry Pi deployment script
+├── advanced_analysis_4class.py      # Advanced statistical analysis
+├── generate_4class_report.py        # Report generation
+│
+└── Documentation/
+    ├── 4CLASS_SYSTEM_README.md      # System overview
+    ├── RASPBERRY_PI_GUIDE.md        # Raspberry Pi deployment
+    ├── DEPLOYMENT_SUMMARY.md        # All deployment options
+    └── ADVANCED_ANALYSIS_4CLASS_README.md
 ```
 
-## Installation
+## 🚀 Quick Start
+
+### 1. Installation
 
 ```bash
+# Clone repository
+git clone https://github.com/ShivamSingh0005/yolo_trained_model_surveillance_system.git
+cd yolo_trained_model_surveillance_system
+
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-## Usage
+### 2. Run Inference (Desktop/Server)
 
-### Option 1: Complete Pipeline (Recommended)
+```python
+from ultralytics import YOLO
 
-Run training, evaluation, and visualization in one command:
+# Load model
+model = YOLO('FINAL_4CLASS_MODEL/best_4class_model.pt')
+
+# Run inference on image
+results = model('image.jpg')
+
+# Display results
+results[0].show()
+
+# Run on video
+results = model('video.mp4', stream=True)
+for result in results:
+    result.show()
+```
+
+### 3. Raspberry Pi Deployment
 
 ```bash
-python complete_pipeline.py --mode all --epochs 100 --batch 16
+# On Raspberry Pi
+wget https://raw.githubusercontent.com/ShivamSingh0005/yolo_trained_model_surveillance_system/main/raspberry_pi_setup.sh
+chmod +x raspberry_pi_setup.sh
+./raspberry_pi_setup.sh
+
+# Transfer model
+scp FINAL_4CLASS_MODEL/best_4class_model.pt pi@<ip>:~/surveillance_system/
+
+# Run surveillance
+python3 raspberry_pi_surveillance.py
 ```
 
-### Option 2: Individual Steps
+See [Raspberry Pi Quick Start](raspberry_pi_quickstart.md) for detailed instructions.
 
-#### Step 1: Train Model
+## 📊 Performance Metrics
+
+### Overall Performance
+- **mAP@0.5**: 92.96%
+- **mAP@0.5:0.95**: 60.24%
+- **Precision**: 87.48%
+- **Recall**: 90.97%
+- **F1-Score**: 89.19%
+
+### Per-Class Performance
+
+| Class | AP50 | Precision | Recall | F1-Score |
+|-------|------|-----------|--------|----------|
+| Animal | 98.4% | 93.5% | 90.5% | 91.9% |
+| Forest | 89.0% | 74.7% | 93.8% | 83.2% |
+| Militant | 88.6% | 85.4% | 84.5% | 84.9% |
+| UAV-Drone | 95.9% | 96.4% | 95.2% | 95.8% |
+
+### Advanced Analysis
+- **Average AUC-ROC**: 0.856 (excellent discrimination)
+- **Pre-alert Window**: 1.6 seconds for threat escalation
+- **Rare Event Detection**: Strong performance at 95th percentile
+
+See [Advanced Analysis](ADVANCED_ANALYSIS_4CLASS_README.md) for detailed statistical analysis.
+
+## 🎯 Use Cases
+
+### 1. Real-time Surveillance
+```python
+# Raspberry Pi with camera
+python3 raspberry_pi_surveillance.py --camera 0
+
+# RTSP stream
+python3 raspberry_pi_surveillance.py --camera "rtsp://192.168.1.100:554/stream"
+
+# Headless mode (no display)
+python3 raspberry_pi_surveillance.py --no-display
+```
+
+### 2. Batch Processing
+```python
+from ultralytics import YOLO
+import glob
+
+model = YOLO('FINAL_4CLASS_MODEL/best_4class_model.pt')
+
+# Process all images in directory
+images = glob.glob('images/*.jpg')
+results = model(images)
+
+# Save results
+for i, result in enumerate(results):
+    result.save(f'output/result_{i}.jpg')
+```
+
+### 3. API Deployment
+```python
+from flask import Flask, request, jsonify
+from ultralytics import YOLO
+
+app = Flask(__name__)
+model = YOLO('FINAL_4CLASS_MODEL/best_4class_model.pt')
+
+@app.route('/detect', methods=['POST'])
+def detect():
+    file = request.files['image']
+    results = model(file)
+    return jsonify(results[0].tojson())
+
+app.run(host='0.0.0.0', port=5000)
+```
+
+## 🔧 Configuration
+
+### Model Configuration
+```yaml
+# data_4class.yaml
+train: train/images
+val: valid/images
+test: test/images
+
+nc: 4  # number of classes
+names: ['Animal', 'Forest', 'Militant', 'UAV-Drone']
+```
+
+### Inference Parameters
+```python
+# Adjust confidence threshold
+results = model('image.jpg', conf=0.6)
+
+# Adjust IoU threshold
+results = model('image.jpg', iou=0.5)
+
+# Use different image size
+results = model('image.jpg', imgsz=416)
+
+# Half precision (faster on GPU)
+results = model('image.jpg', half=True)
+```
+
+## 📈 Performance Optimization
+
+### For Raspberry Pi
+```python
+# Export to ONNX for faster inference
+model.export(format='onnx', simplify=True)
+model_onnx = YOLO('best_4class_model.onnx')
+
+# Use lower resolution
+results = model(image, imgsz=416)
+
+# Process every Nth frame
+if frame_count % 2 == 0:
+    results = model(frame)
+```
+
+### For GPU
+```python
+# Use TensorRT (NVIDIA GPUs)
+model.export(format='engine', device=0)
+model_trt = YOLO('best_4class_model.engine')
+
+# Batch processing
+images = [img1, img2, img3, img4]
+results = model(images)  # Process batch at once
+```
+
+## 🛠️ Development
+
+### Generate Reports
 ```bash
-python train_pipeline.py
+# Generate comprehensive 4-class report
+python generate_4class_report.py
+
+# Run advanced analysis
+python advanced_analysis_4class.py
+
+# Finalize system package
+python finalize_4class_system.py
 ```
 
-#### Step 2: Evaluate Model
+### Test Environment
 ```bash
-python evaluate_model.py
+# Check environment setup
+python check_environment.py
+
+# Test Raspberry Pi setup
+python test_raspberry_pi.py
 ```
 
-#### Step 3: Generate Visualizations
-```bash
-python visualize_results.py
-```
+## 📚 Documentation
 
-### Option 3: Selective Execution
+### Core Documentation
+- [4-Class System Overview](4CLASS_SYSTEM_README.md) - Complete system documentation
+- [Deployment Guide](DEPLOYMENT_SUMMARY.md) - All deployment options
+- [GitHub Setup](GITHUB_SETUP.md) - Repository management
 
-```bash
-# Only training
-python complete_pipeline.py --mode train --epochs 50 --batch 8
+### Raspberry Pi
+- [Quick Start Guide](raspberry_pi_quickstart.md) - 5-minute setup
+- [Complete Guide](RASPBERRY_PI_GUIDE.md) - Detailed documentation
+- [Setup Script](raspberry_pi_setup.sh) - Automated installation
 
-# Only evaluation
-python complete_pipeline.py --mode eval
+### Analysis
+- [Advanced Analysis](ADVANCED_ANALYSIS_4CLASS_README.md) - Statistical analysis
+- [Performance Metrics](FINAL_4CLASS_MODEL/FINAL_SUMMARY.md) - Detailed metrics
 
-# Only visualization
-python complete_pipeline.py --mode viz
-```
+## 🔐 Security & Privacy
 
-## Performance Metrics
+- Implement authentication for API endpoints
+- Use HTTPS/TLS for remote access
+- Encrypt stored detections
+- Comply with local surveillance laws
+- Implement data retention policies
 
-The pipeline generates comprehensive metrics including:
+See [Deployment Summary](DEPLOYMENT_SUMMARY.md) for security best practices.
 
-### Overall Metrics
-- mAP@0.5 (Mean Average Precision at IoU=0.5)
-- mAP@0.5:0.95 (Mean Average Precision at IoU=0.5 to 0.95)
-- Precision
-- Recall
-- F1-Score
+## 🆘 Troubleshooting
 
-### Per-Class Metrics
-- AP@0.5 for each class
-- AP@0.5:0.95 for each class
-- Precision per class
-- Recall per class
+### Common Issues
 
-## Generated Outputs
+**Low FPS on Raspberry Pi**
+- Use lower resolution (416x416)
+- Export to ONNX format
+- Add cooling (heatsink/fan)
+- Process every Nth frame
 
-### Model Files
-- `runs/surveillance/train/weights/best.pt` - Best model checkpoint
-- `runs/surveillance/train/weights/last.pt` - Last epoch checkpoint
+**Out of Memory**
+- Increase swap size
+- Close other applications
+- Use smaller batch size
 
-### Evaluation Results
-- `evaluation_results/metrics.json` - All metrics in JSON format
-- `evaluation_results/evaluation_report.txt` - Detailed text report
+**Camera Not Detected**
+- Enable camera: `sudo raspi-config`
+- Check connections: `ls /dev/video*`
+- Test camera: `raspistill -o test.jpg`
 
-### Visualizations
-1. `overall_metrics.png` - Overall performance bar chart and radar plot
-2. `per_class_metrics.png` - Per-class performance comparison
-3. `training_curves.png` - Training/validation loss and metrics over epochs
-4. `class_distribution.png` - Dataset class distribution
-5. `performance_heatmap.png` - Heatmap of all metrics across classes
-6. `inference_samples.png` - Sample predictions on test images
-7. `summary_dashboard.png` - Comprehensive performance dashboard
+**Model Not Loading**
+- Verify file path
+- Check file integrity
+- Ensure dependencies installed
 
-### Training Artifacts
-- `runs/surveillance/train/confusion_matrix.png` - Confusion matrix
-- `runs/surveillance/train/PR_curve.png` - Precision-Recall curve
-- `runs/surveillance/train/results.csv` - Training metrics per epoch
+## 📊 Dataset Information
 
-## Model Architecture
+### Statistics
+- **Training**: 601 images, 1,069 instances
+- **Validation**: 186 images, 292 instances
+- **Test**: 112 images, 184 instances
+- **Total**: 899 images, 1,545 instances
 
-- Base Model: YOLOv8n (nano)
-- Input Size: 640x640
-- Optimizer: Auto (AdamW/SGD)
-- Learning Rate: 0.01
-- Batch Size: 16 (configurable)
-- Epochs: 100 (configurable)
+### Class Distribution
+- Animal: 308 instances (19.9%)
+- Forest: 308 instances (19.9%)
+- Militant: 308 instances (19.9%)
+- UAV-Drone: 621 instances (40.2%)
 
-## Training Configuration
+## 🎓 Training Details
 
-Key hyperparameters:
-- Image size: 640x640
-- Batch size: 16
-- Learning rate: 0.01
-- Momentum: 0.937
-- Weight decay: 0.0005
-- Data augmentation: Mosaic, flip, HSV adjustments
-- Early stopping patience: 20 epochs
+### Model Architecture
+- **Base Model**: YOLOv8n
+- **Parameters**: 3,006,428
+- **Model Size**: 6.3 MB
+- **Input Size**: 640x640
 
-## Evaluation Metrics Explained
+### Training Configuration
+- **Epochs**: 100
+- **Batch Size**: 16
+- **Optimizer**: AdamW
+- **Learning Rate**: 0.001 → 0.0001 (cosine)
+- **Augmentation**: HSV, rotation, flip, mosaic, mixup
 
-- **mAP@0.5**: Average precision across all classes at IoU threshold 0.5
-- **mAP@0.5:0.95**: Average precision across IoU thresholds from 0.5 to 0.95
-- **Precision**: Ratio of true positives to all positive predictions
-- **Recall**: Ratio of true positives to all actual positives
-- **F1-Score**: Harmonic mean of precision and recall
+### Training Time
+- **Raspberry Pi 5**: Not recommended (use pre-trained model)
+- **Desktop (RTX 3060)**: ~40 minutes
+- **Desktop (CPU only)**: ~4-6 hours
 
-## Example Results Structure
+## 🌟 Features
 
-```
-evaluation_results/
-├── metrics.json
-├── evaluation_report.txt
-├── overall_metrics.png
-├── per_class_metrics.png
-├── training_curves.png
-├── class_distribution.png
-├── performance_heatmap.png
-├── inference_samples.png
-└── summary_dashboard.png
+### Detection Features
+- Multi-class object detection
+- Real-time inference
+- Automatic threat level classification
+- Confidence scoring
+- Bounding box visualization
 
-runs/surveillance/train/
-├── weights/
-│   ├── best.pt
-│   └── last.pt
-├── confusion_matrix.png
-├── PR_curve.png
-├── F1_curve.png
-├── P_curve.png
-├── R_curve.png
-└── results.csv
-```
+### Deployment Features
+- Raspberry Pi optimized
+- Headless mode support
+- Auto-start on boot
+- Remote access (SSH/VNC)
+- RTSP stream support
 
-## Requirements
+### Logging Features
+- Detection image saving
+- JSON metadata logging
+- Performance statistics
+- System monitoring
+- Alert notifications
 
-- Python 3.8+
-- CUDA-capable GPU (recommended)
-- 8GB+ RAM
-- 5GB+ disk space
+## 🤝 Contributing
 
-## License
+This is a complete, production-ready system. For improvements:
+1. Fork the repository
+2. Create feature branch
+3. Test thoroughly
+4. Submit pull request
 
-CC BY 4.0
+## 📄 License
 
-## Dataset Source
+See [LICENSE](LICENSE) file for details.
 
-Roboflow Universe - Surveillance System Dataset
+## 🙏 Acknowledgments
+
+- **YOLOv8**: Ultralytics team
+- **Dataset**: Roboflow surveillance dataset
+- **Framework**: PyTorch, OpenCV
+
+## 📞 Support
+
+- **Documentation**: See docs folder
+- **Issues**: GitHub Issues
+- **Repository**: https://github.com/ShivamSingh0005/yolo_trained_model_surveillance_system
+
+## 📈 Version History
+
+- **v1.0** (Current) - 4-class production system
+  - 93% mAP@0.5
+  - Raspberry Pi support
+  - Complete documentation
+  - Advanced analysis
+
+---
+
+**Status**: ✅ Production Ready | **Performance**: 93% mAP@0.5 | **Model Size**: 6.3 MB
+
+**Last Updated**: April 2026 | **Maintained by**: ShivamSingh0005
